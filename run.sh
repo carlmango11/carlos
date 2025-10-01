@@ -1,0 +1,1 @@
+qemu-system-x86_64 -cdrom build/kernel.iso -m 512
