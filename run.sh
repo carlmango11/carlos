@@ -1,1 +1,1 @@
-qemu-system-x86_64 -cdrom build/kernel.iso -m 512
+qemu-system-x86_64 -cdrom build/kernel.iso -m 512 -no-reboot -no-shutdown -monitor stdio -d int
