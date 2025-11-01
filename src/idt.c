@@ -45,23 +45,31 @@ extern void idt_flush(uint64_t);
 extern void isr1(void);
 
 void main(int loc, char c) {
-    idt_install();
+    print("welcome to CarlOS");
 }
 
-void idt_install() {
-    print("welcome to CarlOS");
+int line = 0;
 
+void idt_install() {
     idt_set_gate(0x21, (uint64_t)isr1, 0x08, 0, IDT_PRESENT | IDT_INT_GATE);
 
-//    idtr.limit = sizeof(idt) - 1;
-//    idtr.base = (uint64_t)&idt;
-//    load_idt(&idtr);
+    idtr.limit = sizeof(idt) - 1;
+    idtr.base = (uint64_t)&idt;
+    load_idt(&idtr);
+
+    print("ready");
+}
+
+void isr_handler() {
+    print("Int");
 }
 
 void print(const char *msg) {
     volatile uint16_t *vga_buffer = (volatile uint16_t *)0xb8000;
 
     for (int i = 0; i < msg[i] != '\0'; i++) {
-        vga_buffer[i] = 0x0f00 | msg[i];
+        vga_buffer[i + (80 * line)] = 0x0f00 | msg[i];
     }
+
+    line++;
 }

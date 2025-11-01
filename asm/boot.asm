@@ -1,11 +1,7 @@
 GLOBAL _start
 
 extern _main
-;extern idt_install
-extern testy2
 extern long_mode_start
-;extern isr_handler
-;extern remap_pic
 
 SECTION .text
 bits 32
@@ -59,7 +55,7 @@ enable_paging:
 
     ; enable paging
     mov eax, cr0
-    or eax, 1 << 31 ; long mode flagt
+    or eax, 1 << 31 ; long mode flag
     mov cr0, eax
 
     ret
@@ -70,18 +66,21 @@ gdt64:
 .code_segment: equ $ - gdt64
     dq (1 << 43) | (1 << 44) | (1 << 47) | (1 << 53) ; code segment: exec flag, descriptor=code+data, present flag, 64bit flag
 .pointer:
-    dw $ - gdt64 - 1 ; current adddress minus start of this section - 1 (i.e. length - 1)
+    dw $ - gdt64 - 1 ; current address minus start of this section - 1 (i.e. length - 1)
     dq gdt64
 
-;global load_idt
-;load_idt:
-;    mov eax, [esp+4]   ; address of idtp
-;    lidt [eax]
-;    ret
+global load_idt
+load_idt:
+    mov eax, [esp+4]   ; address of idtp
+    lidt [eax]
+    int 0x21
+    ret
 
 global isr1
 isr1:
     cli
+    mov dword [0xb8000], 0x2f4b2f4f
+    hlt
     push byte 0        ; error code placeholder
     push byte 1        ; interrupt number
     jmp isr_common_stub
