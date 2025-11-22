@@ -69,49 +69,34 @@ gdt64:
     dw $ - gdt64 - 1 ; current address minus start of this section - 1 (i.e. length - 1)
     dq gdt64
 
+bits 64
 global load_idt
+extern isr_handler
+global isr1
+
 load_idt:
-    mov eax, [esp+4]   ; address of idtp
-    lidt [eax]
-    int 0x21
+    lidt [rdi]
     ret
 
-global isr1
 isr1:
-    cli
-    mov dword [0xb8000], 0x2f4b2f4f
-    hlt
-    push byte 0        ; error code placeholder
-    push byte 1        ; interrupt number
-    jmp isr_common_stub
-
-extern isr_handler
-
-isr_common_stub:
-;    pusha               ; save all registers
-;    push ds
-;    push es
-;    push fs
-;    push gs
-;
-;    mov ax, 0x10        ; kernel data segment
-;    mov ds, ax
-;    mov es, ax
-;    mov fs, ax
-;    mov gs, ax
-
-;    push esp            ; pass pointer to stack frame
-    call isr_handler    ; C function
-;    add esp, 4
-;
-;    pop gs
-;    pop fs
-;    pop es
-;    pop ds
-;    popa
-;    add esp, 8          ; remove int number + err code
-;    sti
-;    iret
+    push rax
+    push rcx
+    push rdx
+    push rbx
+    push rbp
+    push rsi
+    push rdi
+    call isr_handler
+    mov al, 0x20          ; PIC EOI
+    out 0x20, al
+    pop rdi
+    pop rsi
+    pop rbp
+    pop rbx
+    pop rdx
+    pop rcx
+    pop rax
+    iretq
 
 section .bss
 align 4096

@@ -46,9 +46,21 @@ extern void isr1(void);
 
 void main(int loc, char c) {
     print("welcome to CarlOS");
+
+//    while(1) {
+//        for (int i = 0; i < 300000000; i++) {
+//        }
+//        print(".");
+//    }
 }
 
 int line = 0;
+
+static inline uint8_t port_inb(uint16_t port) {
+    uint8_t ret;
+    __asm__ volatile ("inb %1, %0" : "=a"(ret) : "Nd"(port));
+    return ret;
+}
 
 void idt_install() {
     idt_set_gate(0x21, (uint64_t)isr1, 0x08, 0, IDT_PRESENT | IDT_INT_GATE);
@@ -60,16 +72,24 @@ void idt_install() {
     print("ready");
 }
 
+static inline void port_outb(uint16_t port, uint8_t val) {
+    __asm__ volatile ("outb %0, %1" : : "a"(val), "Nd"(port));
+}
+
 void isr_handler() {
-    print("Int");
+    uint8_t sc = port_inb(0x60);      // read keyboard scancode (ack IRQ1)
+    print("pressed");
+    if (sc == 0x1E) {
+        print("a wuz pressed");
+    }
 }
 
 void print(const char *msg) {
     volatile uint16_t *vga_buffer = (volatile uint16_t *)0xb8000;
-
-    for (int i = 0; i < msg[i] != '\0'; i++) {
+    int i = 0;
+    while (msg[i] != '\0') {
         vga_buffer[i + (80 * line)] = 0x0f00 | msg[i];
+        i++;
     }
-
     line++;
 }
