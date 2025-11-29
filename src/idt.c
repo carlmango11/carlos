@@ -48,16 +48,18 @@ extern void idt_flush(uint64_t);
 extern void isr1(void);
 
 void main(int loc, char c) {
-    init_scan_codes();
     print("welcome to CarlOS");
 
-    while(1) {
-        for (int i =0;i<300000000;i++) {}
-        print(".");
-    }
+    for (;;) {}
+
+//    while(1) {
+//        for (int i =0;i<300000000;i++) {}
+//        print(".");
+//    }
 }
 
-int line = 0;
+int cursor_row = 0;
+int cursor_col = 0;
 
 static inline uint8_t port_inb(uint16_t port) {
     uint8_t ret;
@@ -125,15 +127,6 @@ static char scancode_to_ascii[128] = {
     [0x0E] = '\b',    // Backspace
 };
 
-void init_scan_codes() {
-    return;
-    for (int i = 0; i < 128; i++) {
-        if (scancode_to_ascii[i] != '\0') {
-            scancode_to_ascii[i] = '\0';
-        }
-    }
-}
-
 char scancode_to_char(uint8_t code) {
     if (code & 0x80)
         return NO_KEY;  // ignore break codes
@@ -149,34 +142,44 @@ void isr_handler() {
     uint8_t sc = port_inb(0x60);      // read keyboard scancode (ack IRQ1)
 
     char ch = scancode_to_char(sc);
-    if (ch == NO_KEY || ch == 0) {
+    if (ch == NO_KEY) {
         return;
     }
 
-    char dd = scancode_to_ascii[sc];
-    char str[2];
-    str[0] = dd;
-    str[1] = '\0';
-    print(&str);
+    char c = scancode_to_ascii[sc];
+
+    if (c == '\n') {
+        cursor_row++;
+        cursor_col = 0;
+        return;
+    }
+
+    print_char(cursor_row, cursor_col, 0x0f00, c);
+    cursor_col++;
+}
+
+void print_str(int row, int col, int format, const char* msg) {
+    int i = 0;
+    while (msg[i] != '\0') {
+        print_char(cursor_row, col, 0x0f00, msg[i]);
+        i++;
+        col++;
+    }
 }
 
 void print(const char *msg) {
-    print_str(line, 0, 0x0f00, msg);
-    line++;
+    print_str(cursor_row, 0, 0x0f00, msg);
+    cursor_row++;
 }
 
-void print_str(int row, int col, int format, const char *msg) {
+void print_char(int row, int col, int format, const char c) {
     volatile uint16_t *vga_buffer = (volatile uint16_t *)0xb8000;
 
-    int i = 0;
-    while (msg[i] != '\0') {
-        if (msg[i] >= 128) {
-            panic("invalid char");
-        }
-
-        vga_buffer[i + (80 * row)] = format | msg[i];
-        i++;
+    if (c >= 128) {
+        panic("invalid char");
     }
+
+    vga_buffer[col + (80 * row)] = format | c;
 }
 
 void panic(const char *msg) {
