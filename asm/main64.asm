@@ -1,4 +1,6 @@
 global long_mode_start
+global disable_interrupts
+global halt
 
 extern main
 extern remap_pic
@@ -29,4 +31,11 @@ long_mode_start:
 
     call main
 
+    hlt
+
+disable_interrupts:
+    cli
+    ret
+
+halt:
     hlt
