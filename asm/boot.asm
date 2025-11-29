@@ -79,6 +79,7 @@ load_idt:
     ret
 
 isr1:
+    ; Save general purpose registers (include callee-saved r12-r15)
     push rax
     push rcx
     push rdx
@@ -86,9 +87,29 @@ isr1:
     push rbp
     push rsi
     push rdi
+    push r8
+    push r9
+    push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push r15
+
     call isr_handler
-    mov al, 0x20          ; PIC EOI
+
+    ; Send End Of Interrupt to PIC
+    mov al, 0x20
     out 0x20, al
+
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop r11
+    pop r10
+    pop r9
+    pop r8
     pop rdi
     pop rsi
     pop rbp
@@ -96,6 +117,7 @@ isr1:
     pop rdx
     pop rcx
     pop rax
+
     iretq
 
 section .bss
