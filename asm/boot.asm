@@ -71,7 +71,7 @@ gdt64:
 
 bits 64
 global load_idt
-extern isr_handler
+extern keyboard_irt_handler
 global isr1
 
 load_idt:
@@ -96,7 +96,7 @@ isr1:
     push r14
     push r15
 
-    call isr_handler
+    call keyboard_irt_handler
 
     ; Send End Of Interrupt to PIC
     mov al, 0x20
