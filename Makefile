@@ -14,14 +14,8 @@ build/multiboot_header.o: asm/multiboot_header.asm
 build/main.o: src/main.c
 	x86_64-unknown-linux-gnu-gcc -Wall -Wextra -c src/main.c -o build/main.o
 
-build/main.s: src/main.c
-	x86_64-unknown-linux-gnu-gcc -masm=intel -Wall -Wextra -S src/main.c -o build/main.s
-
 build/idt.o: src/idt.c
 	x86_64-unknown-linux-gnu-gcc -Wall -Wextra -c src/idt.c -o build/idt.o
-
-build/idt.s: src/idt.c
-	x86_64-unknown-linux-gnu-gcc -masm=intel -Wall -Wextra -S src/idt.c -o build/idt.s
 
 build/main64.o: asm/main64.asm
 	nasm -f elf64 asm/main64.asm -o build/main64.o
