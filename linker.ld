@@ -5,6 +5,10 @@ ENTRY(_start)
 SECTIONS {
     . = 1M;
 
+    .multiboot : {
+        *(.multiboot_header*)
+    }
+
     .text : {
         *(.text*)
     }
@@ -21,4 +25,7 @@ SECTIONS {
         *(.bss*)
         *(COMMON)
     }
+
+    PROVIDE(heap_start  = .);
+    PROVIDE(heap_end  = . + 32K);
 }
