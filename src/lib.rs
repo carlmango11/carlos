@@ -1,11 +1,9 @@
 #![no_std]
 #![no_main]
 
-extern crate linked_list_allocator;
 extern crate alloc;
+extern crate linked_list_allocator;
 
-use alloc::string::String;
-use alloc::vec::Vec;
 use linked_list_allocator::LockedHeap;
 
 #[global_allocator]
@@ -19,8 +17,8 @@ unsafe extern "C" {
     static heap_start: u8;
     static heap_end: u8;
 
-    static _binary_build_hello_o_start: u8;
-    static _binary_build_hello_o_size: u8;
+    // static _binary_build_hello_o_start: u8;
+    // static _binary_build_hello_o_size: u8;
 }
 
 macro_rules! kpanic {
@@ -33,12 +31,6 @@ macro_rules! kpanic {
         loop {}
     }};
 }
-
-// extern "C" {
-//     static _binary_build_hello_o_start: u8;
-//     static _binary_build_hello_o_end: u8;
-//     static _binary_build_hello_o_size: u8;
-// }
 
 const PIC1_CMD: u16 = 0x20;
 const PIC1_DATA: u16 = 0x21;
@@ -95,7 +87,7 @@ fn write_str(row: isize, format: u16, s: &str) {
 
     for c in s.chars() {
         write_char(row, col, format, c);
-        col+=1;
+        col += 1;
     }
 }
 
@@ -147,26 +139,26 @@ unsafe fn init_heap() {
     HEAP.lock().init(start_mut, size);
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn exec(a: usize) {
-    unsafe {
-        init_heap();
-    }
-
-    let mut buffer = [0u8; 32];
-
-    let start_bin = unsafe { &_binary_build_hello_o_start as *const u8 as usize };
-    let s1 = int_to_str(start_bin as i32, &mut buffer);
-    write_str(1,  0x0f00, s1);
-
-    for i in 0..4 {
-        unsafe {
-            let ptr = (start_bin+i) as *const char;
-            let value = ptr.read();   // or *ptr
-            write_char(3,i as isize,  0x0f00, value);
-        }
-    }
-}
+// #[unsafe(no_mangle)]
+// pub extern "C" fn exec(a: usize) {
+//     unsafe {
+//         init_heap();
+//     }
+//
+//     let mut buffer = [0u8; 32];
+//
+//     let start_bin = unsafe { &_binary_build_hello_o_start as *const u8 as usize };
+//     let s1 = int_to_str(start_bin as i32, &mut buffer);
+//     write_str(1, 0x0f00, s1);
+//
+//     for i in 0..4 {
+//         unsafe {
+//             let ptr = (start_bin + i) as *const char;
+//             let value = ptr.read(); // or *ptr
+//             write_char(3, i as isize, 0x0f00, value);
+//         }
+//     }
+// }
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {

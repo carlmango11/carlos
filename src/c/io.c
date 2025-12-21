@@ -1,25 +1,11 @@
 #include <stdint.h>
-#include <string.h>
-
-extern void disable_interrupts();
-extern void halt();
-
-#define NO_KEY 0
+#include "io.h"
 
 int cursor_row = 0;
 int cursor_col = 0;
 
-extern void exec(int);
-
-static inline uint8_t port_inb(uint16_t port) {
-    uint8_t ret;
-    __asm__ volatile ("inb %1, %0" : "=a"(ret) : "Nd"(port));
-    return ret;
-}
-
-static inline void port_outb(uint16_t port, uint8_t val) {
-    __asm__ volatile ("outb %0, %1" : : "a"(val), "Nd"(port));
-}
+extern void disable_interrupts();
+extern void halt();
 
 static char scancode_to_ascii[128] = {
         [0x02] = '1',
@@ -67,6 +53,31 @@ static char scancode_to_ascii[128] = {
         [0x0E] = '\b',    // Backspace
 };
 
+void panic(const char *msg) {
+    disable_interrupts();
+
+    volatile uint16_t *vga_buffer = (volatile uint16_t *)0xb8000;
+
+    for (int i = 0; i < 80 * 25; i++) {
+        vga_buffer[i] = 0xfc00;
+    }
+
+    print_str(0, 0, 0xfc00, msg);
+
+    halt();
+    return;
+}
+
+static inline uint8_t port_inb(uint16_t port) {
+    uint8_t ret;
+    __asm__ volatile ("inb %1, %0" : "=a"(ret) : "Nd"(port));
+    return ret;
+}
+
+static inline void port_outb(uint16_t port, uint8_t val) {
+    __asm__ volatile ("outb %0, %1" : : "a"(val), "Nd"(port));
+}
+
 void print_char(int row, int col, int format, const char c) {
     volatile uint16_t *vga_buffer = (volatile uint16_t *)0xb8000;
 
@@ -85,21 +96,6 @@ void print_str(int row, int col, int format, const char* msg) {
 void print(const char *msg) {
     print_str(cursor_row, 0, 0x0f00, msg);
     cursor_row++;
-}
-
-void panic(const char *msg) {
-    disable_interrupts();
-
-    volatile uint16_t *vga_buffer = (volatile uint16_t *)0xb8000;
-
-    for (int i = 0; i < 80 * 25; i++) {
-        vga_buffer[i] = 0xfc00;
-    }
-
-    print_str(0, 0, 0xfc00, msg);
-
-    halt();
-    return;
 }
 
 char scancode_to_char(uint8_t code) {
@@ -129,19 +125,6 @@ void keyboard_irt_handler() {
         return;
     }
 
-    print_char(cursor_row, cursor_col, 0x0f00, c);
+    print_char(cursor_row, cursor_col, TEXT_FORMAT, c);
     cursor_col++;
-}
-
-int main(int loc, char **c) {
-    print("welcome to CarlOS");
-
-    exec(1);
-    for (;;) {}
-
-//    while(1) {
-//        for (int i =0;i<300000000;i++) {}
-//        print(".");
-//    }
-    return 0;
 }

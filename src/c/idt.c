@@ -8,9 +8,6 @@
 #define IDT_DPL_0       0x00  // Ring 0
 #define IDT_DPL_3       0x60  // Ring 3
 
-extern disable_interrupts();
-extern halt();
-
 // IDT Entry Structure for Long Mode (16 bytes)
 typedef struct {
     uint16_t offset_low;    // Offset bits 0-15
