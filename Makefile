@@ -27,7 +27,7 @@ $(BUILDDIR)/bin/%.o: $(BUILDDIR)/bin/%.elf | $(BUILDDIR)/bin
 			$< $@
 
 $(BUILDDIR)/bin/%.elf: src/programs/%.c | $(BUILDDIR)/bin
-	$(CC) $(CFLAGS) -nostdlib $< -o $@
+	$(CC) $(CFLAGS) -static -ffreestanding -nostdlib $< -o $@
 
 $(BUILDDIR)/%_asm.o: src/asm/%.asm | $(BUILDDIR)
 	nasm -f elf64 $< -o $@
@@ -40,6 +40,10 @@ $(BUILDDIR)/bin:
 
 $(BUILDDIR):
 	mkdir -p $@
+
+test:
+	$(CC) src/c/*.c tests/*c -lcriterion -o testsuite
+	./testsuite
 
 PHONY: clean
 
