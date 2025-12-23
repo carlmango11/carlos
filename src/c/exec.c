@@ -1,16 +1,18 @@
 #include <stdint.h>
 #include <stddef.h>
-#include <stdlib.h>
 
-#include "exec.h"
-#include "io.h"
+#include "internal/exec.h"
+#include "internal/io.h"
+
+extern uint8_t kernel_l4[];
+extern uint8_t kernel_l3[];
+
+extern uint8_t page_tables_start[];
 
 struct elf {
     uint64_t e_entry;
     uint16_t e_shnum;
 };
-
-
 
 void int_to_string(uint64_t value, char *buf) {
     char *p = buf;
@@ -44,16 +46,21 @@ void int_to_string(uint64_t value, char *buf) {
     }
 }
 
-uint32_t read_32(uint8_t *data, size_t i) {
-    uint32_t d1 = data[i];
-    uint32_t d2 = data[i+1];
-    uint32_t d3 = data[i+2];
-    uint32_t d4 = data[i+3];
+uint64_t read_n(uint8_t *data, size_t loc, int n) {
+    uint64_t val = 0;
 
-    return d1 | (d2 << 8) | (d3 << 16) | (d4 << 24);
+    for (int i = 0; i < n; i++) {
+        uint64_t b = data[loc+i];
+        b <<= 8 * i;
+
+        val |= b;
+    }
+
+    return val;
 }
 
 uint64_t read_64(uint8_t *data, size_t x) {
+    return (uint64_t)read_n(data, x, 8);
     uint32_t val = 0;
 
     for (int i = 0; i < 8; i++) {
@@ -66,10 +73,17 @@ uint64_t read_64(uint8_t *data, size_t x) {
     return val;
 }
 
-void load_program(uint8_t *data, size_t size) {
+uint16_t read_16(uint8_t *data, size_t x) {
+    return (uint16_t)read_n(data, x, 2);
+}
+
+void load_elf(uint8_t *data, size_t size) {
 //    uint8_t header = data[0x20];
 
     uint64_t e_entry = read_64(data, 0x18);
+    uint64_t e_phoff = read_64(data, 0x20);
+
+    uint16_t e_phnum = read_16(data, 0x38);
 
     uint16_t e_shnum_lo = data[0x3C];
     uint16_t e_shnum_hi = data[0x3D];
@@ -84,4 +98,8 @@ void load_program(uint8_t *data, size_t size) {
 
     print_str(1, 0, TEXT_FORMAT, buf);
     print_str(2, 0, TEXT_FORMAT, buf2);
+}
+
+void load_program(uint8_t *data, size_t size) {
+    uintptr_t k4 = (uintptr_t)kernel_l4;
 }

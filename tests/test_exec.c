@@ -1,3 +1,6 @@
 #include <criterion/criterion.h>
+#include "internal/exec.h"
 
-void
+Test(exec, parse_elf) {
+    load_elf(0, 0);
+}

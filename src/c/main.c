@@ -1,8 +1,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "io.h"
-#include "exec.h"
+#include "internal/io.h"
+#include "internal/exec.h"
 
 extern const uint8_t _binary_build_bin_hello_elf_start[];
 extern const size_t  _binary_build_bin_hello_elf_size;

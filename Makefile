@@ -13,8 +13,6 @@ BUNDLED_BIN_SRCS := $(wildcard src/programs/*.c)
 BUNDLED_BIN_OBJS := $(BUNDLED_BIN_SRCS:src/programs/%.c=$(BUILDDIR)/bin/%.o)
 BUNDLED_BIN_ELFS := $(BUNDLED_BIN_SRCS:src/programs/%.c=$(BUILDDIR)/bin/%.elf)
 
-$(info OBJS = $(BUNDLED_BIN_OBJS))
-
 all: build/kernel.iso
 
 $(BUILDDIR)/kernel.elf: $(OBJS) $(ASM_OBJS) $(BUNDLED_BIN_OBJS) target/x86_64-unknown-none/debug/libcarlos.a
@@ -42,8 +40,8 @@ $(BUILDDIR):
 	mkdir -p $@
 
 test:
-	$(CC) src/c/*.c tests/*c -lcriterion -o testsuite
-	./testsuite
+	#gcc -Iinclude -Isrc/c tests/test_exec.c $(shell pkg-config --cflags --libs criterion) -o $(BUILDDIR)/run_tests; $(BUILDDIR)/run_tests
+	gcc -Iinclude -Isrc/c tests/test_exec.c $(shell pkg-config --cflags --libs criterion) -o $(BUILDDIR)/run_tests
 
 PHONY: clean
 

@@ -17,20 +17,20 @@ _start:
     hlt
 
 set_up_page_tables:
-    mov eax, page_table_l3
+    mov eax, kernel_l3
     or eax, 0b11 ; present + writable flags
-    mov [page_table_l4], eax
+    mov [kernel_l4], eax
 
-    mov eax, page_table_l2
+    mov eax, kernel_l2
     or eax, 0b11 ; present + writable flags
-    mov [page_table_l3], eax
+    mov [kernel_l3], eax
 
     mov ecx, 0 ; counter
 .loop:
     mov  eax, 0x200000; 2MB
     mul ecx
     or eax, 0b10000011 ; present + writable + huge page
-    mov [page_table_l2 + ecx * 8], eax
+    mov [kernel_l2 + ecx * 8], eax
 
     inc ecx ; inc
     cmp ecx, 512 ; check
@@ -39,7 +39,7 @@ set_up_page_tables:
     ret
 
 enable_paging:
-    mov eax, page_table_l4
+    mov eax, kernel_l4
     mov cr3, eax
 
     ; enable PAE
@@ -120,14 +120,24 @@ isr1:
 
     iretq
 
+global kernel_l4
+global kernel_l3
+
 section .bss
 align 4096
-page_table_l4:
+kernel_l4:
     resb 4096
-page_table_l3:
+kernel_l3:
     resb 4096
-page_table_l2:
+kernel_l2:
     resb 4096
 stack_bottom:
     resb 1024 * 16 ; 16kb
 stack_top:
+
+user_l4:
+    resb 4096
+user_l3:
+    resb 4096
+user_l2:
+    resb 4096
