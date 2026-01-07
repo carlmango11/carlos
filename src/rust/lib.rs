@@ -1,24 +1,37 @@
 #![no_std]
 #![no_main]
 
+mod paging;
+
 extern crate alloc;
 extern crate linked_list_allocator;
 
+use alloc::vec::Vec;
 use linked_list_allocator::LockedHeap;
 
 #[global_allocator]
 static HEAP: LockedHeap = LockedHeap::empty();
 
 use core::panic::PanicInfo;
+use core::slice;
 use x86::io::inb;
 use x86::io::outb;
+use elf::ElfBytes;
+use elf::endian::LittleEndian;
+use elf::segment::ProgramHeader;
+
 
 unsafe extern "C" {
     static heap_start: u8;
     static heap_end: u8;
 
-    // static _binary_build_hello_o_start: u8;
-    // static _binary_build_hello_o_size: u8;
+    static _binary_build_bin_hello_elf_start: u8;
+    static _binary_build_bin_hello_elf_size: usize;
+
+    static mut user_l4: u8;
+    static mut user_l3: u8;
+    static mut user_l2: u8;
+    static mut user_l1: u8;
 }
 
 macro_rules! kpanic {
@@ -139,26 +152,49 @@ unsafe fn init_heap() {
     HEAP.lock().init(start_mut, size);
 }
 
-// #[unsafe(no_mangle)]
-// pub extern "C" fn exec(a: usize) {
-//     unsafe {
-//         init_heap();
-//     }
-//
-//     let mut buffer = [0u8; 32];
-//
-//     let start_bin = unsafe { &_binary_build_hello_o_start as *const u8 as usize };
-//     let s1 = int_to_str(start_bin as i32, &mut buffer);
-//     write_str(1, 0x0f00, s1);
-//
-//     for i in 0..4 {
-//         unsafe {
-//             let ptr = (start_bin + i) as *const char;
-//             let value = ptr.read(); // or *ptr
-//             write_char(3, i as isize, 0x0f00, value);
-//         }
-//     }
-// }
+struct Process {
+    page_tables: paging::PageTable,
+    elf: ElfBytes<'static, LittleEndian>,
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn main_rust(a: usize) {
+    unsafe {
+        init_heap();
+    }
+
+    let start_bin = unsafe { &_binary_build_bin_hello_elf_start as *const u8 };
+    let size = unsafe { _binary_build_bin_hello_elf_size };
+
+    let mut ps: Vec<Process> = Vec::new();
+
+    let p = Process{
+        page_tables: paging::PageTable::new(),
+        elf: unsafe { load_elf(start_bin, size) },
+    };
+
+    ps.push(p);
+
+    let pid = ps.len() - 1;
+    execute(&mut ps, pid);
+}
+
+fn execute(ps: &mut Vec<Process>, pid: usize) {
+    let p = ps.get_mut(pid).unwrap();
+    
+    for s in p.elf.segments().unwrap() {
+        if s.p_type != 0x00000001 {
+            continue;
+        }
+
+        p.page_tables.load_page(1, 1);
+    }
+}
+
+unsafe fn load_elf(start: *const u8, len: usize) -> ElfBytes<'static, LittleEndian> {
+    let raw = slice::from_raw_parts(start, len);
+     ElfBytes::<LittleEndian>::minimal_parse(raw).unwrap()
+}
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {

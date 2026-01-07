@@ -135,9 +135,16 @@ stack_bottom:
     resb 1024 * 16 ; 16kb
 stack_top:
 
+global user_l4
+global user_l3
+global user_l2
+global user_l1
+
 user_l4:
     resb 4096
 user_l3:
     resb 4096
 user_l2:
+    resb 4096
+user_l1:
     resb 4096

@@ -49,7 +49,7 @@ clean:
 	rm -rf build
 	rm -rf target
 
-target/x86_64-unknown-none/debug/libcarlos.a: src/*
+target/x86_64-unknown-none/debug/libcarlos.a: src/rust/*
 	cargo build
 
 build/kernel.iso: $(BUILDDIR)/kernel.elf
