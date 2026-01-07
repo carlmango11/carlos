@@ -22,28 +22,25 @@ impl PageTable {
         let v3 = (vaddr >> 30) & 0x1FF;
         let v4 = (vaddr >> 39) & 0x1FF;
 
+        let entries = &mut self.entries;
         let t3 = self.tables[v4 as usize].get_or_insert_with(|| {
-            let pt = PageTable::new();
-            let pte = pt.entries.as_ptr();
-            self.entries[v4 as usize] = unsafe {*pte} | 0x11;
-
-            Box::new(pt)
+            let pt = Box::new(PageTable::new());
+            entries[v4 as usize] = (pt.entries.as_ptr() as u64) | 0x11;
+            pt
         });
 
+        let entries = &mut t3.entries;
         let t2 = t3.tables[v3 as usize].get_or_insert_with(|| {
-            let pt = PageTable::new();
-            let pt_ptr = pt.entries.as_ptr();
-            self.entries[v3 as usize] = unsafe {*pt_ptr } | 0x11;
-
-            Box::new(pt)
+            let pt = Box::new(PageTable::new());
+            entries[v3 as usize] = (pt.entries.as_ptr() as u64) | 0x11;
+            pt
         });
 
+        let entries = &mut t2.entries;
         let t1 = t2.tables[v2 as usize].get_or_insert_with(|| {
-            let pt = PageTable::new();
-            let pt_ptr = pt.entries.as_ptr();
-            self.entries[v2 as usize] = unsafe {*pt_ptr } | 0x11;
-
-            Box::new(pt)
+            let pt = Box::new(PageTable::new());
+            entries[v2 as usize] = (pt.entries.as_ptr() as u64) | 0x11;
+            pt
         });
 
         t1.entries[v1 as usize] = paddr | 0x11;

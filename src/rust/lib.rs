@@ -155,6 +155,7 @@ unsafe fn init_heap() {
 struct Process {
     page_tables: paging::PageTable,
     elf: ElfBytes<'static, LittleEndian>,
+    // bin_start: usize,
 }
 
 #[unsafe(no_mangle)]
@@ -181,13 +182,13 @@ pub extern "C" fn main_rust(a: usize) {
 
 fn execute(ps: &mut Vec<Process>, pid: usize) {
     let p = ps.get_mut(pid).unwrap();
-    
+
     for s in p.elf.segments().unwrap() {
         if s.p_type != 0x00000001 {
             continue;
         }
 
-        p.page_tables.load_page(1, 1);
+        p.page_tables.load_page(s.p_vaddr, s.p_offset);
     }
 }
 
