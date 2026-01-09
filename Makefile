@@ -1,6 +1,6 @@
 CC := x86_64-unknown-linux-gnu-gcc
 LD := x86_64-elf-ld
-CFLAGS := -Wall -Wextra
+CFLAGS := -Wall -Wextra -fno-optimize-sibling-calls -fno-omit-frame-pointer -O0 -g
 BUILDDIR := build
 
 SRCS := $(wildcard src/c/*.c)
@@ -51,6 +51,9 @@ clean:
 
 target/x86_64-unknown-none/debug/libcarlos.a: src/rust/*
 	cargo build
+
+target/x86_64-unknown-none/debug/libcarlos.a: src/rust/*
+	RUSTFLAGS="--emit asm" cargo build
 
 build/kernel.iso: $(BUILDDIR)/kernel.elf
 	docker build -t kernel-build .

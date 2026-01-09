@@ -1,5 +1,7 @@
 use alloc::boxed::Box;
+use core::fmt::{Display, Formatter};
 
+#[derive(Debug)]
 #[repr(C, align(4096))]
 pub struct PageTable {
     entries: [u64; 512],

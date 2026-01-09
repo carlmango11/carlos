@@ -10,6 +10,8 @@ elf = { version = "0.8", default-features = false, features = ["alloc"] }
 
 [profile.dev]
 panic = "abort"
+opt-level = 0
+debug = true
 
 [profile.release]
 panic = "abort"

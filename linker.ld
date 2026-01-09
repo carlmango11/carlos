@@ -27,5 +27,5 @@ SECTIONS {
     }
 
     PROVIDE(heap_start  = .);
-    PROVIDE(heap_end  = . + 32K);
+    PROVIDE(heap_end  = . + 32M);
 }
