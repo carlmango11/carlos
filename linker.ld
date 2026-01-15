@@ -13,6 +13,11 @@ SECTIONS {
         *(.text*)
     }
 
+    .bss : {
+        *(.bss*)
+        *(COMMON)
+    }
+
     .rodata : {
         *(.rodata*)
     }
@@ -21,11 +26,8 @@ SECTIONS {
         *(.data*)
     }
 
-    .bss : {
-        *(.bss*)
-        *(COMMON)
-    }
-
+    # needs to be 4k aligned for my page tables
+    . = ALIGN(4K);
     PROVIDE(heap_start  = .);
     PROVIDE(heap_end  = . + 32M);
 }

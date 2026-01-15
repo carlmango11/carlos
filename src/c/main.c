@@ -8,6 +8,7 @@ int main(int loc, char **c) {
     print("welcome to CarlOS");
 
     main_rust(); // RUST
+    print("FINISHED");
     for (;;) {}
     return 0;
 }

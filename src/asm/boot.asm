@@ -6,6 +6,12 @@ extern long_mode_start
 SECTION .text
 bits 32
 _start:
+    cmp eax, 0x36D76289
+    jne failed_multiboot
+
+    mov [multiboot_info], ebx
+    lea ecx, [multiboot_info]
+
     mov esp, stack_top
 
     call set_up_page_tables
@@ -14,6 +20,9 @@ _start:
     lgdt [gdt64.pointer]
     jmp gdt64.code_segment:long_mode_start
 
+    hlt
+
+failed_multiboot:
     hlt
 
 set_up_page_tables:
@@ -27,7 +36,7 @@ set_up_page_tables:
 
     mov ecx, 0 ; counter
 .loop:
-    mov  eax, 0x200000; 2MB
+    mov eax, 0x200000; 2MB
     mul ecx
     or eax, 0b10000011 ; present + writable + huge page
     mov [kernel_l2 + ecx * 8], eax
@@ -71,15 +80,18 @@ gdt64:
 
 bits 64
 global load_idt
+
 extern keyboard_irt_handler
 global isr1
+
+extern page_fault_handler
+global page_fault_routine
 
 load_idt:
     lidt [rdi]
     ret
 
 isr1:
-    ; Save general purpose registers (include callee-saved r12-r15)
     push rax
     push rcx
     push rdx
@@ -120,6 +132,44 @@ isr1:
 
     iretq
 
+page_fault_routine:
+    push rax
+    push rcx
+    push rdx
+    push rbx
+    push rbp
+    push rsi
+    push rdi
+    push r8
+    push r9
+    push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push r15
+
+    mov rdi, cr2
+    call page_fault_handler
+
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rdi
+    pop rsi
+    pop rbp
+    pop rbx
+    pop rdx
+    pop rcx
+    pop rax
+
+    iretq
+
 global kernel_l4
 global kernel_l3
 
@@ -134,17 +184,22 @@ kernel_l2:
 stack_bottom:
     resb 1024 * 16 ; 16kb
 stack_top:
+align 8
+multiboot_info:
+    resq 1
 
-global user_l4
-global user_l3
-global user_l2
-global user_l1
+global multiboot_info
 
-user_l4:
-    resb 4096
-user_l3:
-    resb 4096
-user_l2:
-    resb 4096
-user_l1:
-    resb 4096
+;global user_l4
+;global user_l3
+;global user_l2
+;global user_l1
+;
+;user_l4:
+;    resb 4096
+;user_l3:
+;    resb 4096
+;user_l2:
+;    resb 4096
+;user_l1:
+;    resb 4096

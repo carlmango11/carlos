@@ -15,7 +15,7 @@ BUNDLED_BIN_ELFS := $(BUNDLED_BIN_SRCS:src/programs/%.c=$(BUILDDIR)/bin/%.elf)
 
 all: build/kernel.iso
 
-$(BUILDDIR)/kernel.elf: $(OBJS) $(ASM_OBJS) $(BUNDLED_BIN_OBJS) target/x86_64-unknown-none/debug/libcarlos.a
+$(BUILDDIR)/kernel.elf: $(OBJS) $(ASM_OBJS) $(BUNDLED_BIN_OBJS) target/x86_64-unknown-none/debug/libcarlos.a linker.ld
 	$(LD) -T linker.ld -o $(BUILDDIR)/kernel.elf $(BUILDDIR)/*.o $(BUILDDIR)/bin/*.o target/x86_64-unknown-none/debug/libcarlos.a
 
 $(BUILDDIR)/bin/%.o: $(BUILDDIR)/bin/%.elf | $(BUILDDIR)/bin

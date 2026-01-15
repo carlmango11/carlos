@@ -43,6 +43,7 @@ void idt_set_gate(uint8_t num, uint64_t handler, uint16_t selector,
 
 extern void idt_flush(uint64_t);
 extern void isr1(void);
+extern void page_fault_routine(void);
 
 static inline uint8_t port_inb(uint16_t port) {
     uint8_t ret;
@@ -51,8 +52,9 @@ static inline uint8_t port_inb(uint16_t port) {
 }
 
 void idt_install() {
+//return;
     idt_set_gate(0x21, (uint64_t)isr1, 0x08, 0, IDT_PRESENT | IDT_INT_GATE);
-    idt_set_gate(0x0E, (uint64_t)page_fault_handler, 0x08, 0, IDT_PRESENT | IDT_INT_GATE);
+    idt_set_gate(0x0E, (uint64_t)page_fault_routine, 0x08, 0, IDT_PRESENT | IDT_INT_GATE);
 
     idtr.limit = sizeof(idt) - 1;
     idtr.base = (uint64_t)&idt;

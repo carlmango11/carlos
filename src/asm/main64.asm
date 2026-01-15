@@ -2,7 +2,7 @@ global long_mode_start
 global disable_interrupts
 global halt
 
-extern main
+extern main_rust
 extern remap_pic
 extern idt_install
 
@@ -26,10 +26,9 @@ long_mode_start:
     dec ecx
     jnz .delay
 
-    ; Enable interrupts globally now that IDT & PIC are set
-    sti
+    sti ; Enable interrupts globally now that IDT & PIC are set
 
-    call main
+    call main_rust
 
     hlt
 
