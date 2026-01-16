@@ -78,101 +78,17 @@ pub extern "C" fn page_fault_handler(vaddr: u64) {
     write_str(12, 0xfc00, format!("addr: {:X}", vaddr).as_str());
 }
 
-#[derive(Debug)]
-#[repr(C)]
-struct MultibootMemEntry {
-    addr: u64,  // physical base
-    len: u64,   // length
-    etype: u32, // 1 = usable RAM
-    reserved: u32,
-}
-
-#[derive(Debug)]
-#[repr(C)]
-struct MultibootInfo {
-    total_size: u32,
-    reserved: u32,
-}
-
-#[derive(Debug)]
-#[repr(C)]
-struct MultibootMemTag {
-    ttype: u32,
-    size: u32,
-    entry_size: u32,
-    entry_version: u32,
-}
-
-unsafe fn read_mem_info() -> Vec<&'static MultibootMemEntry> {
-    let mbi = &*(multiboot_info as *const MultibootInfo);
-
-    let mut current = multiboot_info + core::mem::size_of::<MultibootInfo>();
-    let end = current + mbi.total_size as usize;
-
-    while current < end {
-        let tag = &*(current as *const MultibootMemTag);
-
-        if tag.ttype == 0 && tag.size == 8 {
-            break;
-        }
-
-        if tag.ttype == 6 {
-            let x = to_entry(tag);
-            println(7, format!("derp {}", x.len()));
-            return x;
-        }
-
-        current += align_up(tag.size as usize, 8);
-    }
-
-    panic!("no multiboot tag found");
-}
-
-fn align_up(v: usize, align: usize) -> usize {
-    (v + align - 1) & !(align - 1)
-}
-
-unsafe fn to_entry(tag: &MultibootMemTag) -> Vec<&MultibootMemEntry> {
-    let mut current = core::mem::size_of::<MultibootMemTag>();
-    let end = tag.size as usize;
-
-    let mut entries: Vec<&MultibootMemEntry> = Vec::new();
-
-    let mut i = 4;
-    while current < end {
-        let entry = &*((tag as *const _ as *const u8).add(current) as *const MultibootMemEntry);
-
-        if entry.etype == 1 {
-            entries.push(entry);
-            println(
-                10 + i,
-                format!(
-                    "DERP: {} len:{} {} {} size:{}",
-                    entry.etype, entry.len, current, end, tag.size
-                ),
-            );
-            i += 1;
-        }
-
-        current = current + tag.entry_size as usize;
-    }
-
-    entries
-}
-
 #[unsafe(no_mangle)]
 pub extern "C" fn main_rust() {
     unsafe {
         init_heap();
     }
 
-    println(0, format!("welcome to carlOS (rust edition)"));
-
-    let mem_info = unsafe { read_mem_info() };
-    println(5, format!("y: {}", mem_info.len()));
+    let mem_info = unsafe { mem::read_mb_entries() };
+    println(13, format!("entry {}", mem_info.len()));
 
     for (i, e) in mem_info.iter().enumerate() {
-        println(i as u64 + 13, format!("entry {}: {:?}", i, e));
+        println(i as u64 + 14, format!("entry {}: {:?}", i, e.));
     }
 
     return;

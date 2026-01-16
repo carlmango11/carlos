@@ -30,4 +30,6 @@ SECTIONS {
     . = ALIGN(4K);
     PROVIDE(heap_start  = .);
     PROVIDE(heap_end  = . + 32M);
+
+    kernel_end = .;
 }
