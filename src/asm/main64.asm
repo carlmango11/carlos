@@ -6,9 +6,9 @@ extern main_rust
 extern remap_pic
 extern idt_install
 
-section .text
+section .boot_text
 bits 64
-long_mode_start:
+long_mode_trampoline:
     mov ax, 0
     mov ss, ax
     mov ds, ax
@@ -16,6 +16,11 @@ long_mode_start:
     mov fs, ax
     mov gs, ax
 
+;    jmp long_mode_start
+
+section .text
+bits 64
+long_mode_start:
     ; Remap PIC and install IDT entries
     call remap_pic
     call idt_install

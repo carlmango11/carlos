@@ -1,9 +1,9 @@
 GLOBAL _start
 
 extern _main
-extern long_mode_start
+extern long_mode_trampoline
 
-SECTION .text
+SECTION .boot_text
 bits 32
 _start:
     cmp eax, 0x36D76289
@@ -18,7 +18,7 @@ _start:
     call enable_paging
 
     lgdt [gdt64.pointer]
-    jmp gdt64.code_segment:long_mode_start
+    jmp gdt64.code_segment:long_mode_trampoline
 
     hlt
 
@@ -69,7 +69,7 @@ enable_paging:
 
     ret
 
-section .rodata
+section .boot_rodata
 gdt64:
     dq 0; zero entry
 .code_segment: equ $ - gdt64
@@ -173,7 +173,7 @@ page_fault_routine:
 global kernel_l4
 global kernel_l3
 
-section .bss
+section .boot_bss
 align 4096
 kernel_l4:
     resb 4096
