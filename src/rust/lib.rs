@@ -83,12 +83,13 @@ pub extern "C" fn main_rust() {
     unsafe {
         init_heap();
     }
+    return;
 
     let mem_info = unsafe { mem::read_mb_entries() };
     println(13, format!("entry {}", mem_info.len()));
 
     for (i, e) in mem_info.iter().enumerate() {
-        println(i as u64 + 14, format!("entry {}: {:?}", i, e.));
+        println(i as u64 + 14, format!("entry {}", i));
     }
 
     return;
